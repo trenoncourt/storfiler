@@ -79,28 +79,30 @@ namespace Storfiler
                     {
                         builder.MapVerb(method.Verb.ToUpper(), $"{s.Resource}/{method.Path.TrimStart('/')}", async context =>
                         {
-                            switch (method.Action)
+                            try
                             {
-                                case StorefilerAction.List:
-                                    IEnumerable<string> files = Directory.EnumerateFiles(s.DiskPaths.Read.First(), "*", SearchOption.AllDirectories);
-                                    await context.WriteJsonAsync(files);
-                                    break;
-                                case StorefilerAction.Find:
-                                    try
-                                    {
+                                switch (method.Action)
+                                {
+                                    case StorefilerAction.List:
+                                        IEnumerable<string> files = Directory.EnumerateFiles(s.DiskPaths.Read.First(), "*", SearchOption.AllDirectories);
+                                        await context.WriteJsonAsync(files);
+                                        break;
+                                    case StorefilerAction.Find:
                                         FileStream fileStream = File.OpenRead(Path.Combine(s.DiskPaths.Read.First(), context.GetRouteValue("fileName").ToString()));
                                         context.Response.ContentType = "application/octet-stream";
                                         await fileStream.CopyToAsync(context.Response.Body);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Log.Fatal(e, e.Message);
-                                    }
-                                    break;
-                                case StorefilerAction.Add:
-                                    break;
-                                case StorefilerAction.Remove:
-                                    break;
+                                        break;
+                                    case StorefilerAction.Add:
+                                        break;
+                                    case StorefilerAction.Remove:
+                                        File.Delete(Path.Combine(s.DiskPaths.Read.First(), context.GetRouteValue("fileName").ToString()));
+                                        context.Response.StatusCode = StatusCodes.Status204NoContent;
+                                        break;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Fatal(e, e.Message);
                             }
                         });
                     } 
