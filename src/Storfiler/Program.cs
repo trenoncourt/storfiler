@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -31,10 +30,9 @@ namespace Storfiler
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(Configuration)
                 .CreateLogger();
-
             try
             {
-                Log.Information("Starting web host");
+                Log.Information($"Starting Web host at {Environment.GetEnvironmentVariable("ASPNETCORE_URLS")} with env {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}");
                 IWebHostBuilder webHostBuilder = CreateWebHostBuilder();
                 webHostBuilder.Build().Run();
             }
@@ -52,6 +50,8 @@ namespace Storfiler
         {
             IWebHostBuilder builder =  new WebHostBuilder();
             _appOptions = Configuration.Get<ApplicationOptions>();
+            Log.Debug("Configuration used: {@configuration}", _appOptions);
+            
             if (_appOptions.Host.UseIis)
             {
                 builder.UseIISIntegration();
@@ -77,26 +77,45 @@ namespace Storfiler
                 {
                     foreach (var method in s.Methods)
                     {
-                        builder.MapVerb(method.Verb.ToUpper(), $"{s.Resource}/{method.Path.TrimStart('/')}", async context =>
+                        builder.MapVerb(method.Verb.ToUpper(), $"{s.Resource}/{method.Path.TrimStart('/')}", async c =>
                         {
+                            Log.Debug("Request: {@ip} -> {@method} {@protocol} {@scheme}://{@host}{@path}{@queryString}", c.Connection.RemoteIpAddress.ToString(), c.Request.Method, c.Request.Protocol, c.Request.Scheme, c.Request.Host.ToString(), c.Request.Path.ToString(), c.Request.QueryString.ToString());
                             try
                             {
+                                string filePath;
                                 switch (method.Action)
                                 {
                                     case StorefilerAction.List:
+                                        Log.Information("Query: Read directory files {directory}", s.DiskPaths.Read.First());
                                         IEnumerable<string> files = Directory.EnumerateFiles(s.DiskPaths.Read.First(), "*", SearchOption.AllDirectories);
-                                        await context.WriteJsonAsync(files);
+                                        await c.WriteJsonAsync(files);
                                         break;
                                     case StorefilerAction.Find:
-                                        FileStream fileStream = File.OpenRead(Path.Combine(s.DiskPaths.Read.First(), context.GetRouteValue("fileName").ToString()));
-                                        context.Response.ContentType = "application/octet-stream";
-                                        await fileStream.CopyToAsync(context.Response.Body);
+                                        filePath = Path.Combine(s.DiskPaths.Read.First(), c.GetRouteValue("fileName").ToString());
+                                        Log.Information("Query: Read file {file}", filePath);
+                                        if (!File.Exists(filePath))
+                                        {
+                                            c.Response.StatusCode = StatusCodes.Status404NotFound;
+                                            Log.Warning("File {file} does not exist", filePath);
+                                            return;
+                                        }
+                                        FileStream fileStream = File.OpenRead(filePath);
+                                        c.Response.ContentType = "application/octet-stream";
+                                        await fileStream.CopyToAsync(c.Response.Body);
                                         break;
                                     case StorefilerAction.Add:
                                         break;
                                     case StorefilerAction.Remove:
-                                        File.Delete(Path.Combine(s.DiskPaths.Read.First(), context.GetRouteValue("fileName").ToString()));
-                                        context.Response.StatusCode = StatusCodes.Status204NoContent;
+                                        filePath = Path.Combine(s.DiskPaths.Read.First(), c.GetRouteValue("fileName").ToString());
+                                        Log.Information("Command: Remove file {file}", filePath);
+                                        if (!File.Exists(filePath))
+                                        {
+                                            c.Response.StatusCode = StatusCodes.Status404NotFound;
+                                            Log.Warning("File {file} does not exist", filePath);
+                                            return;
+                                        }
+                                        File.Delete(filePath);
+                                        c.Response.StatusCode = StatusCodes.Status204NoContent;
                                         break;
                                 }
                             }
