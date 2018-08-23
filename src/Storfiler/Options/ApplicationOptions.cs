@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Server.Kestrel.Core;
+﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace Storfiler.Options
 {
@@ -7,5 +8,7 @@ namespace Storfiler.Options
         public HostOptions Host { get; set; }
         
         public KestrelServerOptions Kestrel { get; set; }
+
+        public IEnumerable<StorfilerOptions> Storfiler { get; set; }
     }
 }
