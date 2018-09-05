@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Storfiler.Constants;
+using Storfiler.Dtos;
 using Storfiler.Extensions;
 using Storfiler.Options;
 
@@ -87,8 +88,8 @@ namespace Storfiler
                                 {
                                     case StorefilerAction.List:
                                         Log.Information("Query: Read directory files {directory}", s.DiskPaths.Read.First());
-                                        IEnumerable<string> files = Directory.EnumerateFiles(s.DiskPaths.Read.First(), "*", SearchOption.AllDirectories);
-                                        await c.WriteJsonAsync(files);
+                                        IEnumerable<string> listFiles = Directory.EnumerateFiles(s.DiskPaths.Read.First(), "*", SearchOption.AllDirectories);
+                                        await c.WriteJsonAsync(listFiles);
                                         break;
                                     case StorefilerAction.Find:
                                         filePath = Path.Combine(s.DiskPaths.Read.First(), c.GetRouteValue("fileName").ToString());
@@ -116,6 +117,25 @@ namespace Storfiler
                                         }
                                         File.Delete(filePath);
                                         c.Response.StatusCode = StatusCodes.Status204NoContent;
+                                        break;
+                                    case StorefilerAction.Search:
+                                        string fileName = c.GetRouteValue("fileName").ToString();
+                                        string pattern = string.IsNullOrEmpty(method.Pattern) ? fileName : method.Pattern.Replace("{fileName}", fileName);
+                                        Log.Information("Query: Search files in directory {directory} with pattern {pattern}", s.DiskPaths.Read.First(), pattern);
+                                        IEnumerable<string> searchFiles = Directory.EnumerateFiles(s.DiskPaths.Read.First(), pattern, SearchOption.AllDirectories);
+                                        if (method.AddMetadatas)
+                                        {
+                                            List<FileMetadatas> filesMetadatas = new List<FileMetadatas>();
+                                            foreach (string file in searchFiles)
+                                            {
+                                                string name = Path.GetFileName(file);
+                                                string parent = Path.GetFileName(Path.GetDirectoryName(file));
+                                                filesMetadatas.Add(new FileMetadatas {FullPath = file, Name = name, Parent = parent});
+                                            }
+                                            await c.WriteJsonAsync(filesMetadatas);
+                                            return;
+                                        }
+                                        await c.WriteJsonAsync(searchFiles);
                                         break;
                                 }
                             }

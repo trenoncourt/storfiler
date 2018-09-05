@@ -25,5 +25,9 @@ namespace Storfiler.Options
         public string Path { get; set; }
 
         public string Action { get; set; }
+
+        public string Pattern { get; set; }
+
+        public bool AddMetadatas { get; set; }
     }
 }

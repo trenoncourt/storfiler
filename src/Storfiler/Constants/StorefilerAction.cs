@@ -9,5 +9,7 @@
         public const string Add = nameof(Add);
         
         public const string Remove = nameof(Remove);
+
+        public const string Search = nameof(Search);
     }
 }
