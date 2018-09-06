@@ -74,12 +74,25 @@ storfiler configuration
       {
         "Verb": "Get",
         "Path": "/{fileName}",
-        "Action": "Find" // Find & download one file
+        "Action": "Download" // Find & download one file
+      },
+      {
+        "Verb": "Get",
+        "Path": "/download",
+        "Query": "path", // To use a path we must use query
+        "Action": "Download",
+        "IsFullPath": true // Specify if we use fullPath or read path
       },
       {
         "Verb": "Delete",
         "Path": "/{fileName}",
         "Action": "Remove" // remove one file
+      },
+      {
+        "Verb": "Get",
+        "Path": "/files/search/{fileName}",
+        "Pattern": "{fileName}*",
+        "Action": "Search" // search file in folder/subfolders with pattern
       }
     ]
   }
