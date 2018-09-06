@@ -91,8 +91,26 @@ namespace Storfiler
                                         IEnumerable<string> listFiles = Directory.EnumerateFiles(s.DiskPaths.Read.First(), "*", SearchOption.AllDirectories);
                                         await c.WriteJsonAsync(listFiles);
                                         break;
-                                    case StorefilerAction.Find:
-                                        filePath = Path.Combine(s.DiskPaths.Read.First(), c.GetRouteValue("fileName").ToString());
+                                    case StorefilerAction.Download:
+                                        if (!string.IsNullOrEmpty(method.Query) && c.Request.Query.ContainsKey(method.Query))
+                                        {
+                                            filePath = c.Request.Query[method.Query];
+                                        }
+                                        else
+                                        {
+                                            filePath = c.GetRouteValue("fileName")?.ToString();
+                                            if (string.IsNullOrEmpty(filePath))
+                                            {
+                                                Log.Warning("Could not find file in route or query", filePath);
+                                                c.Response.StatusCode = StatusCodes.Status400BadRequest;
+                                                return;
+                                            }
+                                        }
+
+                                        if (!method.IsFullPath)
+                                        {
+                                            filePath = Path.Combine(s.DiskPaths.Read.First(), filePath);
+                                        }
                                         Log.Information("Query: Read file {file}", filePath);
                                         if (!File.Exists(filePath))
                                         {
@@ -101,7 +119,9 @@ namespace Storfiler
                                             return;
                                         }
                                         FileStream fileStream = File.OpenRead(filePath);
-                                        c.Response.ContentType = "application/octet-stream";
+                                        string contentType = MimeTypeMap.List.MimeTypeMap.GetMimeType(Path.GetExtension(filePath)).First();
+                                        c.Response.Headers.TryAdd("Content-Disposition", $"attachment; filename=\"{Path.GetFileName(filePath)}\"");
+                                        c.Response.ContentType = contentType;
                                         await fileStream.CopyToAsync(c.Response.Body);
                                         break;
                                     case StorefilerAction.Add:
@@ -123,19 +143,21 @@ namespace Storfiler
                                         string pattern = string.IsNullOrEmpty(method.Pattern) ? fileName : method.Pattern.Replace("{fileName}", fileName);
                                         Log.Information("Query: Search files in directory {directory} with pattern {pattern}", s.DiskPaths.Read.First(), pattern);
                                         IEnumerable<string> searchFiles = Directory.EnumerateFiles(s.DiskPaths.Read.First(), pattern, SearchOption.AllDirectories);
-                                        if (method.AddMetadatas)
+                                        List<FileMetadatas> filesMetadatas = new List<FileMetadatas>();
+                                        foreach (string file in searchFiles)
                                         {
-                                            List<FileMetadatas> filesMetadatas = new List<FileMetadatas>();
-                                            foreach (string file in searchFiles)
+                                            string name = Path.GetFileName(file);
+                                            string nameWithoutExt = name.Remove(name.LastIndexOf(".", StringComparison.InvariantCultureIgnoreCase));
+                                            string parent = Path.GetFileName(Path.GetDirectoryName(file));
+                                            filesMetadatas.Add(new FileMetadatas
                                             {
-                                                string name = Path.GetFileName(file);
-                                                string parent = Path.GetFileName(Path.GetDirectoryName(file));
-                                                filesMetadatas.Add(new FileMetadatas {FullPath = file, Name = name, Parent = parent});
-                                            }
-                                            await c.WriteJsonAsync(filesMetadatas);
-                                            return;
+                                                FullPath = file, 
+                                                Name = name, 
+                                                Parent = parent, 
+                                                NameWithoutExt = nameWithoutExt
+                                            });
                                         }
-                                        await c.WriteJsonAsync(searchFiles);
+                                        await c.WriteJsonAsync(filesMetadatas);
                                         break;
                                 }
                             }

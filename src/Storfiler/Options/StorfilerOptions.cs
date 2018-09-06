@@ -28,6 +28,8 @@ namespace Storfiler.Options
 
         public string Pattern { get; set; }
 
-        public bool AddMetadatas { get; set; }
+        public string Query { get; set; }
+
+        public bool IsFullPath { get; set; }
     }
 }

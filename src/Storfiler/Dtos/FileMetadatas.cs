@@ -3,6 +3,8 @@ namespace Storfiler.Dtos
     public class FileMetadatas
     {
         public string Name { get; set; }
+        
+        public string NameWithoutExt { get; set; }
 
         public string FullPath { get; set; }
 

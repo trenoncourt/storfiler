@@ -4,7 +4,9 @@
     {
         public const string List = nameof(List);
         
-        public const string Find = nameof(Find);
+        public const string Download = nameof(Download);
+        
+        public const string DownLoadPath = nameof(DownLoadPath);
         
         public const string Add = nameof(Add);
         
