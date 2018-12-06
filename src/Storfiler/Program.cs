@@ -13,6 +13,7 @@ using Storfiler.Constants;
 using Storfiler.Dtos;
 using Storfiler.Extensions;
 using Storfiler.Options;
+using Storfiler.Core;
 
 namespace Storfiler
 {
@@ -25,7 +26,7 @@ namespace Storfiler
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddEnvironmentVariables()
             .Build();
-        
+
         public static void Main()
         {
             Log.Logger = new LoggerConfiguration()
@@ -49,10 +50,10 @@ namespace Storfiler
 
         public static IWebHostBuilder CreateWebHostBuilder()
         {
-            IWebHostBuilder builder =  new WebHostBuilder();
+            IWebHostBuilder builder = new WebHostBuilder();
             _appOptions = Configuration.Get<ApplicationOptions>();
             Log.Debug("Configuration used: {@configuration}", _appOptions);
-            
+
             if (_appOptions.Host.UseIis)
             {
                 builder.UseIISIntegration();
@@ -65,7 +66,7 @@ namespace Storfiler
                 .ConfigureServices(services => services.AddCors().AddRouting())
                 .UseDefaultServiceProvider((context, options) => options.ValidateScopes = context.HostingEnvironment.IsDevelopment())
                 .Configure(ConfigureApp);
-            
+
             return builder;
         }
 
@@ -83,81 +84,22 @@ namespace Storfiler
                             Log.Debug("Request: {@ip} -> {@method} {@protocol} {@scheme}://{@host}{@path}{@queryString}", c.Connection.RemoteIpAddress.ToString(), c.Request.Method, c.Request.Protocol, c.Request.Scheme, c.Request.Host.ToString(), c.Request.Path.ToString(), c.Request.QueryString.ToString());
                             try
                             {
-                                string filePath;
                                 switch (method.Action)
                                 {
-                                    case StorefilerAction.List:
-                                        Log.Information("Query: Read directory files {directory}", s.DiskPaths.Read.First());
-                                        IEnumerable<string> listFiles = Directory.EnumerateFiles(s.DiskPaths.Read.First(), "*", SearchOption.AllDirectories);
-                                        await c.WriteJsonAsync(listFiles);
+                                    case StorfilerActions.List:
+                                        await StorfilerAction.ListFilesAsync(c, s);
                                         break;
-                                    case StorefilerAction.Download:
-                                        if (!string.IsNullOrEmpty(method.Query) && c.Request.Query.ContainsKey(method.Query))
-                                        {
-                                            filePath = c.Request.Query[method.Query];
-                                        }
-                                        else
-                                        {
-                                            filePath = c.GetRouteValue("fileName")?.ToString();
-                                            if (string.IsNullOrEmpty(filePath))
-                                            {
-                                                Log.Warning("Could not find file in route or query", filePath);
-                                                c.Response.StatusCode = StatusCodes.Status400BadRequest;
-                                                return;
-                                            }
-                                        }
-
-                                        if (!method.IsFullPath)
-                                        {
-                                            filePath = Path.Combine(s.DiskPaths.Read.First(), filePath);
-                                        }
-                                        Log.Information("Query: Read file {file}", filePath);
-                                        if (!File.Exists(filePath))
-                                        {
-                                            c.Response.StatusCode = StatusCodes.Status404NotFound;
-                                            Log.Warning("File {file} does not exist", filePath);
-                                            return;
-                                        }
-                                        FileStream fileStream = File.OpenRead(filePath);
-                                        string contentType = MimeTypeMap.List.MimeTypeMap.GetMimeType(Path.GetExtension(filePath)).First();
-                                        c.Response.Headers.TryAdd("Content-Disposition", $"attachment; filename=\"{Path.GetFileName(filePath)}\"");
-                                        c.Response.ContentType = contentType;
-                                        await fileStream.CopyToAsync(c.Response.Body);
+                                    case StorfilerActions.Download:
+                                        await StorfilerAction.DownloadFileAsync(c, method, s);
                                         break;
-                                    case StorefilerAction.Add:
+                                    case StorfilerActions.Add:
+                                        StorfilerAction.AddFile(c, s);
                                         break;
-                                    case StorefilerAction.Remove:
-                                        filePath = Path.Combine(s.DiskPaths.Read.First(), c.GetRouteValue("fileName").ToString());
-                                        Log.Information("Command: Remove file {file}", filePath);
-                                        if (!File.Exists(filePath))
-                                        {
-                                            c.Response.StatusCode = StatusCodes.Status404NotFound;
-                                            Log.Warning("File {file} does not exist", filePath);
-                                            return;
-                                        }
-                                        File.Delete(filePath);
-                                        c.Response.StatusCode = StatusCodes.Status204NoContent;
+                                    case StorfilerActions.Remove:
+                                        StorfilerAction.RemoveFile(c, s);
                                         break;
-                                    case StorefilerAction.Search:
-                                        string fileName = c.GetRouteValue("fileName").ToString();
-                                        string pattern = string.IsNullOrEmpty(method.Pattern) ? fileName : method.Pattern.Replace("{fileName}", fileName);
-                                        Log.Information("Query: Search files in directory {directory} with pattern {pattern}", s.DiskPaths.Read.First(), pattern);
-                                        IEnumerable<string> searchFiles = Directory.EnumerateFiles(s.DiskPaths.Read.First(), pattern, SearchOption.AllDirectories);
-                                        List<FileMetadatas> filesMetadatas = new List<FileMetadatas>();
-                                        foreach (string file in searchFiles)
-                                        {
-                                            string name = Path.GetFileName(file);
-                                            string nameWithoutExt = name.Remove(name.LastIndexOf(".", StringComparison.InvariantCultureIgnoreCase));
-                                            string parent = Path.GetFileName(Path.GetDirectoryName(file));
-                                            filesMetadatas.Add(new FileMetadatas
-                                            {
-                                                FullPath = file, 
-                                                Name = name, 
-                                                Parent = parent, 
-                                                NameWithoutExt = nameWithoutExt
-                                            });
-                                        }
-                                        await c.WriteJsonAsync(filesMetadatas);
+                                    case StorfilerActions.Search:
+                                        await StorfilerAction.SearchFilesAsync(c, method, s);
                                         break;
                                 }
                             }
@@ -166,7 +108,7 @@ namespace Storfiler
                                 Log.Fatal(e, e.Message);
                             }
                         });
-                    } 
+                    }
                 }
             });
         }
