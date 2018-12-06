@@ -1,6 +1,6 @@
 ﻿namespace Storfiler.Constants
 {
-    public class StorefilerAction
+    public class StorfilerActions
     {
         public const string List = nameof(List);
         
