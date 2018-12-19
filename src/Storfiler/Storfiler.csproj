@@ -8,7 +8,7 @@
       <Version>2.1.1</Version>
     </PackageReference>
     <PackageReference Include="MimeTypeMap.List">
-      <Version>1.2.0</Version>
+      <Version>2.0.1</Version>
     </PackageReference>
     <PackageReference Include="Serilog.AspNetCore">
       <Version>2.1.1</Version>
@@ -19,5 +19,8 @@
     <PackageReference Include="Serilog.Sinks.Console">
       <Version>3.1.1</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Storfiler.AspNetCore\Storfiler.AspNetCore.csproj" />
   </ItemGroup>
 </Project>

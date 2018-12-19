@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Storfiler.Extensions
+namespace Storfiler.AspNetCore.Extensions
 {
     public static class HttpContextExtensions
     {
