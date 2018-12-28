@@ -83,14 +83,23 @@ namespace Storfiler.AspNetCore.Core
             if (!endpoint.Provider.IsFullPath)
             {
                 filePath = Path.Combine(endpoint.Path ?? "", filePath);
+                Log.Information("Query: Download file {file}", filePath);
+                string fileName = Path.GetFileName(filePath);
+                IBlobStorage storage = _storageProvider.GetStorage(endpoint.Provider, filePath.Replace(fileName, ""));
+                bool fileExist = await storage.ExistsAsync(fileName);
+                if (!fileExist) return null;
+                return await storage.OpenReadAsync(fileName);
             }
-            Log.Information("Query: Read file {file}", filePath);
-            IBlobStorage storage = _storageProvider.GetStorage(endpoint.Provider);
+            else
+            {
+                Log.Information("Query: Download file {file}", filePath);
+                IBlobStorage storage = _storageProvider.GetStorage(endpoint.Provider);
+                bool fileExist = await storage.ExistsAsync(filePath);
+                if (!fileExist) return null;
+                return await storage.OpenReadAsync(filePath);
+            }
             
             
-            bool fileExist = await storage.ExistsAsync(filePath);
-            if (!fileExist) return null;
-            return await storage.OpenReadAsync(filePath);
         }
 
         public async Task AddFileAsync(MethodOptions methodOptions, StorageOptions storageOptions, IFormFileCollection files, string subPath)
@@ -127,12 +136,22 @@ namespace Storfiler.AspNetCore.Core
             if (!endpoint.Provider.IsFullPath)
             {
                 filePath = Path.Combine(endpoint.Path ?? "", filePath);
+                string fileName = Path.GetFileName(filePath);
+                Log.Information("Command: Remove file {file}", filePath);
+                IBlobStorage storage = _storageProvider.GetStorage(endpoint.Provider, filePath.Replace(fileName, ""));
+                bool fileExist = await storage.ExistsAsync(fileName);
+                if (!fileExist) return false;
+                await storage.DeleteAsync(fileName);
             }
-            Log.Information("Command: Remove file {file}", filePath);
-            IBlobStorage storage = _storageProvider.GetStorage(endpoint.Provider);
-            bool fileExist = await storage.ExistsAsync(filePath);
-            if (!fileExist) return false;
-            await storage.DeleteAsync(filePath);
+            else
+            {
+                IBlobStorage storage = _storageProvider.GetStorage(endpoint.Provider);
+                Log.Information("Command: Remove file {file}", filePath);
+                bool fileExist = await storage.ExistsAsync(filePath);
+                if (!fileExist) return false;
+                await storage.DeleteAsync(filePath);
+            }
+
             return true;
         }
 
