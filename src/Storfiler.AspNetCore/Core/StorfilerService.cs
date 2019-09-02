@@ -119,7 +119,7 @@ namespace Storfiler.AspNetCore.Core
                         IBlobStorage storage = _storageProvider.GetStorage(endpoint.Provider);
                         using (var fs = file.OpenReadStream())
                         {
-                            await storage.WriteAsync(Path.Combine(endpoint.Path ?? "", subPath ?? "", file.FileName), fs);
+                            await storage.WriteAsync(file.FileName, fs);
                         }
                     }
                 }
