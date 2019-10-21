@@ -97,9 +97,7 @@ namespace Storfiler.AspNetCore.Core
                 bool fileExist = await storage.ExistsAsync(filePath);
                 if (!fileExist) return null;
                 return await storage.OpenReadAsync(filePath);
-            }
-            
-            
+            }                       
         }
 
         public async Task AddFileAsync(MethodOptions methodOptions, StorageOptions storageOptions, IFormFileCollection files, string subPath)

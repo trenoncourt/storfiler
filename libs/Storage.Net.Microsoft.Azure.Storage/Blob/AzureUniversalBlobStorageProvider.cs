@@ -29,8 +29,15 @@ namespace Storage.Net.Microsoft.Azure.Storage.Blob
             new StorageCredentials(accountName, key),
             true);
 
+        BlobRequestOptions requestoptions = new BlobRequestOptions()
+        {
+            SingleBlobUploadThresholdInBytes = 1024 * 1024 * 50, //50MB
+            ParallelOperationThreadCount = 12,
+        };
+
          _client = account.CreateCloudBlobClient();
-         _fixedContainerName = containerName;
+        _client.DefaultRequestOptions = requestoptions;
+        _fixedContainerName = containerName;
       }
 
       private AzureUniversalBlobStorageProvider(Uri sasUri)
