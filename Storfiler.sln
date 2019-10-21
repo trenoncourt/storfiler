@@ -4,6 +4,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{671C6E44-44B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storfiler", "src\Storfiler\Storfiler.csproj", "{9F0F9917-FCA4-4EEB-B90E-5DF10AFD6D08}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storfiler.AspNetCore", "src\Storfiler.AspNetCore\Storfiler.AspNetCore.csproj", "{599E75FC-0FAB-4381-A803-5DDC078B40FC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{1D0D3214-0FBD-4D7D-8296-28AD96FBF104}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storage.Net", "libs\Storage.Net\Storage.Net.csproj", "{A6DB20DA-80C8-4AD4-8128-B60D1E09E4BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storage.Net.Microsoft.Azure.Storage", "libs\Storage.Net.Microsoft.Azure.Storage\Storage.Net.Microsoft.Azure.Storage.csproj", "{6BB730A1-C228-46F5-8F84-F991864E2163}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -11,11 +19,26 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9F0F9917-FCA4-4EEB-B90E-5DF10AFD6D08} = {671C6E44-44BA-4FBE-A66F-7F7F3F2FE449}
+		{599E75FC-0FAB-4381-A803-5DDC078B40FC} = {671C6E44-44BA-4FBE-A66F-7F7F3F2FE449}
+		{A6DB20DA-80C8-4AD4-8128-B60D1E09E4BC} = {1D0D3214-0FBD-4D7D-8296-28AD96FBF104}
+		{6BB730A1-C228-46F5-8F84-F991864E2163} = {1D0D3214-0FBD-4D7D-8296-28AD96FBF104}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{9F0F9917-FCA4-4EEB-B90E-5DF10AFD6D08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9F0F9917-FCA4-4EEB-B90E-5DF10AFD6D08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F0F9917-FCA4-4EEB-B90E-5DF10AFD6D08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F0F9917-FCA4-4EEB-B90E-5DF10AFD6D08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{599E75FC-0FAB-4381-A803-5DDC078B40FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{599E75FC-0FAB-4381-A803-5DDC078B40FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{599E75FC-0FAB-4381-A803-5DDC078B40FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{599E75FC-0FAB-4381-A803-5DDC078B40FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6DB20DA-80C8-4AD4-8128-B60D1E09E4BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6DB20DA-80C8-4AD4-8128-B60D1E09E4BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6DB20DA-80C8-4AD4-8128-B60D1E09E4BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6DB20DA-80C8-4AD4-8128-B60D1E09E4BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BB730A1-C228-46F5-8F84-F991864E2163}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BB730A1-C228-46F5-8F84-F991864E2163}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BB730A1-C228-46F5-8F84-F991864E2163}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BB730A1-C228-46F5-8F84-F991864E2163}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
